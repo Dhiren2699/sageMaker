@@ -1,4 +1,3 @@
-from flask import Flask, jsonify
 import os
 import boto3
 import numpy as np
@@ -7,7 +6,6 @@ from tensorflow.keras.models import load_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from mne.io import read_raw_edf, read_raw_bdf
 
-app = Flask(__name__)
 
 # S3 Configuration
 bucket_name = 'dhiren-dorich-domain-406'
@@ -58,7 +56,7 @@ def summary_eeg_data(file_path):
 
     return np.array(windows), np.array(annotations).reshape(-1, 1)
 
-@app.route('/predict', methods=['GET'])
+
 def predict_eeg():
     # Download EEG file
     s3.download_file(bucket_name, edf_key, edf_path)
@@ -83,7 +81,7 @@ def predict_eeg():
         "recall": round(recall, 4),
         "f1_score": round(f1, 4)
     }
-    return jsonify(results)
+    return results
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    predict_eeg()
