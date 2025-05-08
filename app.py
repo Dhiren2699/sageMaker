@@ -3,14 +3,15 @@ import boto3
 import numpy as np
 import pandas as pd
 import warnings
+import time
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from mne.io import read_raw_edf, read_raw_bdf
 
-# Suppress all warnings
+# Suppress warnings
 warnings.filterwarnings("ignore")
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # TensorFlow log level to suppress INFO and WARNING
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 # S3 Configuration
 bucket_name = 'dhiren-dorich-domain-406'
@@ -79,10 +80,13 @@ def predict_eeg():
     print("Window data shape:", window_data.shape)
     print("Labels shape:", labels.shape)
 
+    # Predict timing
+    pred_start_time = time.time()
     print("Making predictions...")
     Y_PRED = model.predict(window_data)
-    print("Raw prediction output (first 5):", Y_PRED[:5].flatten())
+    pred_end_time = time.time()
 
+    print("Raw prediction output (first 5):", Y_PRED[:5].flatten())
     Y_PRED = (Y_PRED > 0.5).astype("int32")
     print("Binarized predictions:", np.unique(Y_PRED, return_counts=True))
 
@@ -92,12 +96,17 @@ def predict_eeg():
     recall = recall_score(labels, Y_PRED, zero_division=0)
     f1 = f1_score(labels, Y_PRED, zero_division=0)
 
+    # Show timing
+    pred_duration = pred_end_time - pred_start_time
+    print(f"Time taken for prediction: {pred_duration:.2f} seconds")
+
     # Return Results
     results = {
         "accuracy": round(accuracy, 4),
         "precision": round(precision, 4),
         "recall": round(recall, 4),
-        "f1_score": round(f1, 4)
+        "f1_score": round(f1, 4),
+        "prediction_time_sec": round(pred_duration, 2)
     }
 
     print("Evaluation Results:")
@@ -107,4 +116,7 @@ def predict_eeg():
     return results
 
 if __name__ == '__main__':
+    start_time = time.time()
     predict_eeg()
+    total_time = time.time() - start_time
+    print(f"\nTotal script execution time: {total_time:.2f} seconds")
