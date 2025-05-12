@@ -113,6 +113,7 @@ def predict_eeg():
     for k, v in results.items():
         print(f"{k}: {v}")
 
+    #return results
     return results
 
 if __name__ == '__main__':
